@@ -1,4 +1,4 @@
-import {  ITask } from '@/interface/task';
+import {  ITask } from '@/interface/api.response';
 import axios, { AxiosResponse } from 'axios';
 
 // Define the types for the API response and task objects
