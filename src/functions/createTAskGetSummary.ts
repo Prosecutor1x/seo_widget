@@ -1,77 +1,86 @@
-import { ITask } from '@/interface/task';
-import axios, { AxiosResponse } from 'axios';
+import { ApiResponse, IResult, ITask } from "@/interface/api.response";
+import axios, { AxiosResponse } from "axios";
+import { configDotenv } from "dotenv";
 
-// Define the types for the API response and task objects
-//interface Task {
-  //id: string;
-  //crawl_progress: string; 
-  // Assuming "crawl_progress" is a property indicating the task progress
-  // Add more properties as needed
-//}
 
-interface ApiResponse {
-  tasks: ITask[];
-  // Add more properties from the API response if needed
-}
+// I wrote a single function which systematically handles the creation of a task and the retrieval of the summary of the task 
+// You can find the types described in the interface file
+// I wrote individual functions to but then tried to do something more convenient and this is the result
 
-// Function to create a task and get its summary
+
 const createTaskAndGetSummary = async (targetUrl: string): Promise<ITask[]> => {
-  const authHeader = 'Basic bmFuZGFramlzaHJhbnVqb25AZ21haWwuY29tOjI5NWU2ZTE0OWZkMmJjMWM=';
+  const authHeader =process.env.NEXT_PUBLIC_DATAFORSEO_AUTH_HEADER ;
+  const username =process.env.NEXT_PUBLIC_DATAFORSEO_USERNAME;
+  const password  =process.env.NEXT_PUBLIC_DATAFORSEO_PASSWORD;
+  const url =  process.env.NEXT_PUBLIC_DATAFORSEO_API_URL
+  console.log(authHeader,username,password,url);
+    
   const maxWaitTimeInSeconds = 20; // Maximum wait time in seconds (adjust as needed)
 
   try {
-    // Step 1: Create a task
-    const createTaskResponse: AxiosResponse<ApiResponse> = await axios.post('https://api.dataforseo.com/v3/on_page/task_post', [
+    // Create task
+    const createTaskResponse: AxiosResponse<ApiResponse> = await axios.post(
+      url +'task_post',
+      [
+        {
+          target: targetUrl,
+          max_crawl_pages: 5,
+          load_resources: true,
+          enable_javascript: true,
+          tag: "task1",
+          enable_browser_rendering: true,
+        },
+      ],
       {
-        "target": targetUrl,
-        "max_crawl_pages": 5,
-        "load_resources": true,
-        "enable_javascript": true,
-        "tag": "task1",
-        "enable_browser_rendering": true,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: authHeader,
+        },
+        auth: {
+          username : username as string,
+          password : password  as string,
+        },
       }
-    ], {
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': authHeader
-      },
-      auth: {
-        username: "nandakrishnarjun@gmail.com",
-        password: "295e6e109fd2bc1c",
-      },
-    });
+    );
 
     const taskId = createTaskResponse.data.tasks[0].id;
     console.log("Task ID:", taskId);
+    
+    
+    // Get task status
+
 
     const startTime = Date.now();
-    let taskStatus: ITask;
+    let taskStatus: IResult;
 
-    // Step 2: Poll for task completion with a timeout
+
+      //timeout added in case the page crawling takes too long
+
+
     while (true) {
       if (Date.now() - startTime > maxWaitTimeInSeconds * 1000) {
-        // Timeout reached, exit the loop
         console.log("Timeout reached. Task not finished.");
         break;
       }
 
-      // Delay execution for a few seconds before checking the status again (adjust as needed)
-      await new Promise((resolve) => setTimeout(resolve, 5000)); // 5 seconds
+      await new Promise((resolve) => setTimeout(resolve, 5000));
 
-      // Get the task status
-      const getTaskResponse: AxiosResponse<ApiResponse> = await axios.get(`https://api.dataforseo.com/v3/on_page/summary/${taskId}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': authHeader
-        },
-        auth: {
-          username: "nandakrishnarjun@gmail.com",
-          password: "295e6e109fd2bc1c",
-        },
-      });
+      const getTaskResponse: AxiosResponse<ApiResponse> = await axios.get(
+        url +`summary/${taskId}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: authHeader,
+          },
+          auth: {
+            username : username as string,
+            password : password  as string,
+          },
+        }
+      );
 
-      taskStatus = getTaskResponse.data.tasks[0];
-     // console.log("Task Status:", taskStatus);
+      taskStatus = getTaskResponse.data.tasks[0].result[0];
+      // console.log("Task Status:", taskStatus);
 
       if (taskStatus.crawl_progress === "finished") {
         // Task finished, exit the loop
@@ -79,28 +88,30 @@ const createTaskAndGetSummary = async (targetUrl: string): Promise<ITask[]> => {
       }
     }
 
-    // Step 3: Get the task summary after completion
-    
-      const getSummaryResponse: AxiosResponse<ApiResponse> = await axios.get(`https://api.dataforseo.com/v3/on_page/summary/${taskId}`, {
+
+    // Get task summary
+
+    const getSummaryResponse: AxiosResponse<ApiResponse> = await axios.get(
+      url +`summary/${taskId}`,
+      {
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': authHeader
+          "Content-Type": "application/json",
+          Authorization: authHeader,
         },
         auth: {
-          username: "nandakrishnarjun@gmail.com",
-          password: "295e6e109fd2bc1c",
+          username : username as string,
+          password : password  as string,
         },
-      });
+      }
+    );
 
-      const taskSummary = getSummaryResponse.data.tasks;
-      // Task summary data
-      //console.log(taskSummary);
-      return taskSummary;
-  
+    const taskSummary = getSummaryResponse.data.tasks;
+    //console.log(taskSummary);
+    return taskSummary;
   } catch (error) {
     console.log("Error:", error);
     throw error;
   }
-}
+};
 
 export default createTaskAndGetSummary;
