@@ -1,6 +1,9 @@
 # SEO Next.js Widget with DataForSEO API 
 ## ~ Krishnarjun Nanda
 
+## Live URL
+https://seowidget-production.up.railway.app/
+
 This is a Next.js widget that provides SEO insights using the DataForSEO API. It allows you to check various on-page SEO metrics for a given URL.
 
 ## Features
