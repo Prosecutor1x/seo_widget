@@ -12,15 +12,15 @@ const createTaskAndGetSummary = async (targetUrl: string): Promise<ITask[]> => {
   const authHeader =process.env.NEXT_PUBLIC_DATAFORSEO_AUTH_HEADER ;
   const username =process.env.NEXT_PUBLIC_DATAFORSEO_USERNAME;
   const password  =process.env.NEXT_PUBLIC_DATAFORSEO_PASSWORD;
-  const url =  process.env.NEXT_PUBLIC_DATAFORSEO_API_URL
-  console.log(authHeader,username,password,url);
+  
+ 
     
   const maxWaitTimeInSeconds = 20; // Maximum wait time in seconds (adjust as needed)
 
   try {
     // Create task
     const createTaskResponse: AxiosResponse<ApiResponse> = await axios.post(
-      url +'task_post',
+      'https://api.dataforseo.com/v3/on_page/task_post',
       [
         {
           target: targetUrl,
@@ -66,7 +66,7 @@ const createTaskAndGetSummary = async (targetUrl: string): Promise<ITask[]> => {
       await new Promise((resolve) => setTimeout(resolve, 5000));
 
       const getTaskResponse: AxiosResponse<ApiResponse> = await axios.get(
-        url +`summary/${taskId}`,
+       ` https://api.dataforseo.com/v3/on_page/summary/${taskId}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -92,7 +92,7 @@ const createTaskAndGetSummary = async (targetUrl: string): Promise<ITask[]> => {
     // Get task summary
 
     const getSummaryResponse: AxiosResponse<ApiResponse> = await axios.get(
-      url +`summary/${taskId}`,
+      `https://api.dataforseo.com/v3/on_page/summary/${taskId}`,
       {
         headers: {
           "Content-Type": "application/json",
